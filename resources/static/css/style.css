@@ -1,0 +1,63 @@
+/* 确保所有链接都有正确的基础样式 */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+/* 按钮链接样式 */
+a.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    border: none;
+    color: white;
+}
+
+a.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    text-decoration: none;
+}
+
+/* 特定按钮颜色 */
+a.btn-primary {
+    background: #667eea;
+}
+
+a.btn-secondary {
+    background: #6c757d;
+}
+
+a.btn-success {
+    background: #28a745;
+}
+
+a.btn-warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+a.btn-info {
+    background: #17a2b8;
+}
+
+a.btn-danger {
+    background: #dc3545;
+}
+
+/* 活动状态 */
+a.btn.active {
+    background: #495057;
+    border-color: #495057;
+}

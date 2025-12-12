@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${isBookmarkedPage} ? '收藏联系人' : '联系人列表'">联系人列表 - 联系簿管理系统</title>
+    <!-- 使用 Thymeleaf 引用静态资源 -->
+    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* 补充样式，确保一致性 */
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            min-height: 90vh;
+        }
+
+        .nav-links {
+            margin: 20px 30px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-to-home {
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .back-to-home:hover {
+            color: #5a6fd8;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 导航链接 -->
+    <div class="nav-links">
+        <a th:href="@{/}" class="back-to-home">
+            <i class="fas fa-home"></i> 返回首页
+        </a>
+        <span style="color: #ccc;">|</span>
+        <a th:href="@{/contacts}" th:classappend="${not isBookmarkedPage} ? 'active' : ''" class="btn btn-secondary">
+            <i class="fas fa-list"></i> 全部联系人
+        </a>
+        <a th:href="@{/contacts/bookmarked}" th:classappend="${isBookmarkedPage} ? 'active' : ''" class="btn btn-warning">
+            <i class="fas fa-star"></i> 收藏联系人
+        </a>
+    </div>
+
+    <!-- 消息提示 -->
+    <div th:if="${message}" class="alert alert-success">
+        <i class="fas fa-check-circle"></i>
+        <span th:text="${message}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i>
+        <span th:text="${error}"></span>
+    </div>
+
+    <header>
+        <h1><i class="fas fa-address-book"></i>
+            <span th:text="${isBookmarkedPage} ? '收藏联系人' : '联系人列表'"></span>
+        </h1>
+        <div class="header-actions">
+            <button onclick="showImportModal()" class="btn btn-info">
+                <i class="fas fa-file-import"></i> 导入
+            </button>
+            <div class="dropdown">
+                <button class="btn btn-success">
+                    <i class="fas fa-file-export"></i> 导出
+                </button>
+                <div class="dropdown-content">
+                    <!-- 使用 Thymeleaf 链接 -->
+                    <a th:href="@{/contacts/export/all}" class="dropdown-item">
+                        <i class="fas fa-users"></i> 导出全部
+                    </a>
+                    <a th:href="@{/contacts/export/bookmarked}" class="dropdown-item">
+                        <i class="fas fa-star"></i> 导出收藏
+                    </a>
+                </div>
+            </div>
+            <a th:href="@{/contacts/add}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> 添加联系人
+            </a>
+        </div>
+    </header>
+
+    <!-- 搜索框 -->
+    <div class="search-box">
+        <form th:action="@{/contacts}" method="get" class="search-form">
+            <input type="text" name="search" th:value="${searchKeyword}"
+                   placeholder="搜索联系人..." class="search-input">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> 搜索
+            </button>
+            <a th:href="@{/contacts}" class="btn btn-secondary" th:if="${searchKeyword}">
+                <i class="fas fa-times"></i> 清除
+            </a>
+        </form>
+    </div>
+
+    <!-- 联系人列表 -->
+    <div class="contacts-container">
+        <div th:if="${#lists.isEmpty(contacts)}" class="empty-state">
+            <i class="fas fa-users-slash fa-4x"></i>
+            <h2>暂无联系人</h2>
+            <p>点击"添加联系人"按钮开始添加您的第一个联系人</p>
+            <a th:href="@{/contacts/add}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus"></i> 添加联系人
+            </a>
+            <div style="margin-top: 20px;">
+                <a th:href="@{/}" class="btn btn-secondary">
+                    <i class="fas fa-home"></i> 返回首页
+                </a>
+            </div>
+        </div>
+
+        <div th:unless="${#lists.isEmpty(contacts)}" class="contacts-grid">
+            <div th:each="contact : ${contacts}" class="contact-card" th:classappend="${contact.bookmarked} ? 'bookmarked' : ''">
+                <div class="contact-header">
+                    <h3 th:text="${contact.name}">姓名</h3>
+                    <div class="contact-actions">
+                        <!-- 使用 Thymeleaf 链接 -->
+                        <a th:href="@{/contacts/toggle-bookmark/{id}(id=${contact.id})}"
+                           class="btn-star" th:classappend="${contact.bookmarked} ? 'active' : ''"
+                           th:title="${contact.bookmarked} ? '取消收藏' : '收藏'">
+                            <i class="fas fa-star"></i>
+                        </a>
+                        <a th:href="@{/contacts/edit/{id}(id=${contact.id})}" class="btn-edit" title="编辑">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a th:href="@{/contacts/delete/{id}(id=${contact.id})}"
+                           class="btn-delete" title="删除"
+                           onclick="return confirm('确定要删除这个联系人吗？')">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="contact-info">
+                    <div th:if="${contact.company}" class="info-item">
+                        <i class="fas fa-building"></i>
+                        <span th:text="${contact.company}">公司</span>
+                    </div>
+                    <div th:if="${contact.position}" class="info-item">
+                        <i class="fas fa-briefcase"></i>
+                        <span th:text="${contact.position}">职位</span>
+                    </div>
+
+                    <div class="contact-methods" th:if="${not #lists.isEmpty(contact.contactMethods)}">
+                        <div th:each="method : ${contact.contactMethods}" class="method-item">
+                            <i th:class="'fas ' + ${method.type == T(com.example.contactbookssystem.model.ContactMethodType).PHONE ? 'fa-phone' :
+                                method.type == T(com.example.contactbookssystem.model.ContactMethodType).EMAIL ? 'fa-envelope' :
+                                method.type == T(com.example.contactbookssystem.model.ContactMethodType).WECHAT ? 'fa-comment' :
+                                method.type == T(com.example.contactbookssystem.model.ContactMethodType).QQ ? 'fa-comments' :
+                                method.type == T(com.example.contactbookssystem.model.ContactMethodType).ADDRESS ? 'fa-map-marker-alt' : 'fa-link'}"></i>
+                            <span th:text="${method.label != null ? method.label + ': ' + method.value : method.type.displayName + ': ' + method.value}"></span>
+                            <span th:if="${method.primary}" class="badge-primary">主要</span>
+                        </div>
+                    </div>
+
+                    <div th:if="${contact.notes}" class="contact-notes">
+                        <i class="fas fa-sticky-note"></i>
+                        <span th:text="${contact.notes}">备注</span>
+                    </div>
+                </div>
+
+                <div class="contact-footer">
+                    <span class="contact-status" th:if="${contact.bookmarked}">
+                        <i class="fas fa-star"></i> 已收藏
+                    </span>
+                    <small class="contact-id">ID: <span th:text="${contact.id}"></span></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 导入模态框 -->
+<div id="importModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>导入联系人</h2>
+            <span class="close" onclick="closeImportModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <!-- 使用 Thymeleaf action -->
+            <form th:action="@{/contacts/import}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label><i class="fas fa-file-excel"></i> 选择Excel文件</label>
+                    <input type="file" name="file" accept=".xlsx,.xls" required>
+                </div>
+                <div class="form-group">
+                    <div class="help-text">
+                        <h4><i class="fas fa-info-circle"></i> 文件格式要求：</h4>
+                        <ul>
+                            <li>支持 .xlsx 和 .xls 格式</li>
+                            <li>第一行应为表头：姓名,公司,职位,备注,是否收藏,电话,邮箱,微信,QQ,地址</li>
+                            <li>是否收藏列请填写"是"或"否"</li>
+                            <li>姓名是必填项，其他列可为空</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeImportModal()">
+                        取消
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> 导入
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 导入模态框控制
+    function showImportModal() {
+        document.getElementById('importModal').style.display = 'block';
+    }
+
+    function closeImportModal() {
+        document.getElementById('importModal').style.display = 'none';
+    }
+
+    // 页面加载完成后的初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('联系人列表页加载完成');
+
+        // 显示当前路径信息
+        console.log('当前页面URL:', window.location.href);
+        console.log('相对路径测试:');
+        console.log('  - 主页:', window.location.origin + '/');
+        console.log('  - 添加联系人:', window.location.origin + '/contacts/add');
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
+
+        // 下拉菜单悬停效果
+        const dropdowns = document.querySelectorAll('.dropdown');
+        dropdowns.forEach(dropdown => {
+            dropdown.addEventListener('mouseenter', function() {
+                this.querySelector('.dropdown-content').style.display = 'block';
+            });
+            dropdown.addEventListener('mouseleave', function() {
+                this.querySelector('.dropdown-content').style.display = 'none';
+            });
+        });
+
+        // 测试所有链接
+        const links = document.querySelectorAll('a');
+        links.forEach(link => {
+            link.addEventListener('click', function(e) {
+                console.log('点击链接:', this.href, '文本:', this.textContent);
+            });
+        });
+    });
+</script>
+</body>
+</html>

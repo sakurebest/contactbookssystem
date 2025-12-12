@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${isEdit} ? '编辑联系人' : '添加联系人'">添加联系人</title>
+    <!-- 使用 Thymeleaf 引用静态资源 -->
+    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .nav-links {
+            margin: 20px 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .back-link {
+            color: #667eea;
+            border: 1px solid #667eea;
+            background: white;
+        }
+
+        .back-link:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .home-link {
+            color: #6c757d;
+            border: 1px solid #6c757d;
+            background: white;
+        }
+
+        .home-link:hover {
+            background: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 导航链接 -->
+    <div class="nav-links">
+        <a th:href="@{/}" class="home-link">
+            <i class="fas fa-home"></i> 返回首页
+        </a>
+        <a th:href="@{/contacts}" class="back-link">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
+    </div>
+
+    <!-- 消息提示 -->
+    <div th:if="${message}" class="alert alert-success">
+        <i class="fas fa-check-circle"></i>
+        <span th:text="${message}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i>
+        <span th:text="${error}"></span>
+    </div>
+
+    <div class="form-container">
+        <div class="form-header">
+            <h2><i class="fas fa-user"></i>
+                <span th:text="${isEdit} ? '编辑联系人' : '添加联系人'"></span>
+            </h2>
+            <p style="color: #6c757d; margin-top: 10px; font-size: 14px;">
+                <i class="fas fa-info-circle"></i>
+                填写联系人信息，带 * 的为必填项
+            </p>
+        </div>
+
+        <!-- 使用 Thymeleaf action -->
+        <form th:action="@{/contacts/save}" method="post" id="contactForm">
+            <input type="hidden" name="id" th:value="${contact.id}">
+
+            <div class="form-section">
+                <h3><i class="fas fa-id-card"></i> 基本信息</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name"><i class="fas fa-user"></i> 姓名 *</label>
+                        <input type="text" id="name" name="name" th:value="${contact.name}"
+                               required placeholder="请输入联系人姓名" autofocus>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="company"><i class="fas fa-building"></i> 公司</label>
+                        <input type="text" id="company" name="company" th:value="${contact.company}"
+                               placeholder="请输入公司名称">
+                    </div>
+                    <div class="form-group">
+                        <label for="position"><i class="fas fa-briefcase"></i> 职位</label>
+                        <input type="text" id="position" name="position" th:value="${contact.position}"
+                               placeholder="请输入职位">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3><i class="fas fa-phone"></i> 联系方式 *</h3>
+                <div id="contactMethodsContainer">
+                    <div th:each="method, stat : ${contact.contactMethods}" class="method-input">
+                        <div class="method-type">
+                            <label>类型</label>
+                            <select name="methodTypes" required>
+                                <option value="">请选择</option>
+                                <!-- 使用 Thymeleaf 遍历枚举 -->
+                                <option th:each="type : ${contactMethodTypes}"
+                                        th:value="${type}"
+                                        th:text="${type.displayName}"
+                                        th:selected="${method.type == type}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="method-value">
+                            <label>联系方式</label>
+                            <input type="text" name="methodValues" th:value="${method.value}"
+                                   placeholder="如：13800138000 或 example@email.com" required>
+                        </div>
+                        <div class="method-label">
+                            <label>标签</label>
+                            <input type="text" name="methodLabels" th:value="${method.label}"
+                                   placeholder="如：工作电话、个人邮箱等">
+                        </div>
+                        <div class="method-primary">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="methodPrimaries" th:value="${stat.index}"
+                                       th:checked="${method.primary}"> 主要联系方式
+                            </label>
+                        </div>
+                        <div class="method-remove">
+                            <button type="button" class="btn-remove" onclick="removeMethod(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 如果没有联系方式，显示默认的 -->
+                    <div th:if="${#lists.isEmpty(contact.contactMethods)}" class="method-input">
+                        <div class="method-type">
+                            <label>类型</label>
+                            <select name="methodTypes" required>
+                                <option value="">请选择</option>
+                                <option th:each="type : ${contactMethodTypes}"
+                                        th:value="${type}"
+                                        th:text="${type.displayName}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="method-value">
+                            <label>联系方式</label>
+                            <input type="text" name="methodValues"
+                                   placeholder="如：13800138000 或 example@email.com" required>
+                        </div>
+                        <div class="method-label">
+                            <label>标签</label>
+                            <input type="text" name="methodLabels"
+                                   placeholder="如：工作电话、个人邮箱等">
+                        </div>
+                        <div class="method-primary">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="methodPrimaries" value="0"> 主要联系方式
+                            </label>
+                        </div>
+                        <div class="method-remove">
+                            <button type="button" class="btn-remove" onclick="removeMethod(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-secondary" onclick="addMethod()">
+                    <i class="fas fa-plus"></i> 添加联系方式
+                </button>
+                <small class="form-text">至少需要填写一种联系方式</small>
+            </div>
+
+            <div class="form-section">
+                <h3><i class="fas fa-sticky-note"></i> 其他信息</h3>
+                <div class="form-group">
+                    <label for="notes">备注</label>
+                    <textarea id="notes" name="notes" rows="4"
+                              placeholder="请输入备注信息" th:text="${contact.notes}"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="bookmarked" th:checked="${contact.bookmarked}">
+                        <i class="fas fa-star"></i> 收藏此联系人
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a th:href="@{/contacts}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> 取消
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    <span th:text="${isEdit} ? '更新联系人' : '保存联系人'"></span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 添加联系方式
+    function addMethod() {
+        const container = document.getElementById('contactMethodsContainer');
+        const index = container.children.length;
+
+        // 创建新的联系方式输入行
+        const methodDiv = document.createElement('div');
+        methodDiv.className = 'method-input';
+        methodDiv.innerHTML = `
+            <div class="method-type">
+                <label>类型</label>
+                <select name="methodTypes" required>
+                    <option value="">请选择</option>
+                    <option value="PHONE">电话</option>
+                    <option value="EMAIL">邮箱</option>
+                    <option value="WECHAT">微信</option>
+                    <option value="QQ">QQ</option>
+                    <option value="ADDRESS">地址</option>
+                    <option value="OTHER">其他</option>
+                </select>
+            </div>
+            <div class="method-value">
+                <label>联系方式</label>
+                <input type="text" name="methodValues"
+                       placeholder="如：13800138000 或 example@email.com" required>
+            </div>
+            <div class="method-label">
+                <label>标签</label>
+                <input type="text" name="methodLabels"
+                       placeholder="如：工作电话、个人邮箱等">
+            </div>
+            <div class="method-primary">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="methodPrimaries" value="${index}"> 主要联系方式
+                </label>
+            </div>
+            <div class="method-remove">
+                <button type="button" class="btn-remove" onclick="removeMethod(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+
+        container.appendChild(methodDiv);
+        console.log('添加了第' + index + '个联系方式输入框');
+    }
+
+    // 移除联系方式
+    function removeMethod(button) {
+        const methods = document.querySelectorAll('#contactMethodsContainer .method-input');
+        if (methods.length > 1) {
+            button.closest('.method-input').remove();
+            // 重新索引
+            updateMethodIndices();
+        } else {
+            alert('至少需要一个联系方式');
+        }
+    }
+
+    // 更新索引
+    function updateMethodIndices() {
+        const methods = document.querySelectorAll('#contactMethodsContainer .method-input');
+        methods.forEach((methodDiv, index) => {
+            const checkbox = methodDiv.querySelector('input[name="methodPrimaries"]');
+            if (checkbox) {
+                checkbox.value = index;
+            }
+        });
+    }
+
+    // 表单验证
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        if (!name) {
+            e.preventDefault();
+            alert('请输入联系人姓名');
+            document.getElementById('name').focus();
+            return;
+        }
+
+        // 检查是否有有效的联系方式
+        const methodValues = document.querySelectorAll('input[name="methodValues"]');
+        let hasValidMethod = false;
+        methodValues.forEach(input => {
+            if (input.value.trim()) {
+                hasValidMethod = true;
+            }
+        });
+
+        if (!hasValidMethod) {
+            e.preventDefault();
+            alert('请至少填写一个有效的联系方式');
+            return;
+        }
+
+        // 检查类型是否选择
+        const methodTypes = document.querySelectorAll('select[name="methodTypes"]');
+        let allTypesSelected = true;
+        methodTypes.forEach(select => {
+            if (!select.value) {
+                allTypesSelected = false;
+            }
+        });
+
+        if (!allTypesSelected) {
+            e.preventDefault();
+            alert('请为所有联系方式选择类型');
+            return;
+        }
+
+        console.log('表单提交验证通过，正在保存...');
+    });
+
+    // 页面加载完成后的初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('编辑页面加载完成');
+        console.log('当前页面URL:', window.location.href);
+
+        // 自动聚焦到姓名输入框
+        const nameInput = document.getElementById('name');
+        if (nameInput) {
+            nameInput.focus();
+            console.log('焦点已设置到姓名输入框');
+        }
+
+        // 显示表单数据信息
+        const contactId = document.querySelector('input[name="id"]')?.value;
+        if (contactId) {
+            console.log('正在编辑联系人ID:', contactId);
+        } else {
+            console.log('正在添加新联系人');
+        }
+    });
+</script>
+</body>
+</html>

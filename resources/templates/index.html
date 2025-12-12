@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>联系簿管理系统</title>
+    <!-- 使用 Thymeleaf 引用静态资源 -->
+    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .welcome-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .welcome-card {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .welcome-icon {
+            font-size: 80px;
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+
+        .welcome-title {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .welcome-features {
+            text-align: left;
+            margin: 30px 0;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .welcome-features h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+        }
+
+        .feature-list i {
+            color: #28a745;
+            font-size: 18px;
+            min-width: 24px;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .welcome-btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            min-width: 200px;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .server-info {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .server-info p {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .server-info a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .server-info a:hover {
+            color: #5a6fd8;
+            text-decoration: underline;
+        }
+
+        .server-info i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-running {
+            background-color: #28a745;
+        }
+
+        @media (max-width: 768px) {
+            .welcome-card {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .welcome-title {
+                font-size: 2em;
+            }
+
+            .welcome-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .welcome-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .welcome-features {
+                padding: 15px;
+            }
+        }
+
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .welcome-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* 按钮动画 */
+        .welcome-btn {
+            animation: fadeInUp 0.6s ease-out 0.3s both;
+        }
+    </style>
+</head>
+<body>
+<div class="welcome-container">
+    <div class="welcome-card">
+        <div class="welcome-icon">
+            <i class="fas fa-address-book"></i>
+        </div>
+
+        <h1 class="welcome-title">联系簿管理系统</h1>
+
+        <p class="welcome-subtitle">
+            一个功能完整的联系人管理系统<br>
+            支持添加、编辑、收藏、搜索和导入导出功能
+        </p>
+
+        <div class="welcome-features">
+            <h3><i class="fas fa-star"></i> 主要功能</h3>
+            <ul class="feature-list">
+                <li><i class="fas fa-check-circle"></i> 添加和管理联系人信息</li>
+                <li><i class="fas fa-check-circle"></i> 支持多种联系方式（电话、邮箱、微信等）</li>
+                <li><i class="fas fa-check-circle"></i> 收藏重要联系人</li>
+                <li><i class="fas fa-check-circle"></i> 搜索和筛选联系人</li>
+                <li><i class="fas fa-check-circle"></i> Excel导入导出功能</li>
+                <li><i class="fas fa-check-circle"></i> 响应式设计，支持移动设备</li>
+            </ul>
+        </div>
+
+        <div class="welcome-actions">
+            <!-- 使用 Thymeleaf 的 @{} 语法 -->
+            <a th:href="@{/contacts}" class="welcome-btn btn-primary">
+                <i class="fas fa-rocket"></i> 进入系统
+            </a>
+            <a th:href="@{/contacts/add}" class="welcome-btn btn-success">
+                <i class="fas fa-plus"></i> 添加联系人
+            </a>
+            <a th:href="@{/h2-console}" class="welcome-btn btn-info" target="_blank">
+                <i class="fas fa-database"></i> 数据库管理
+            </a>
+        </div>
+
+        <div class="server-info">
+            <p>
+                <i class="fas fa-server"></i>
+                <span>服务器状态: </span>
+                <span class="status-indicator status-running"></span>
+                <span style="color: #28a745; font-weight: 500;">运行中</span>
+            </p>
+            <p><i class="fas fa-info-circle"></i> 当前地址: <span id="currentUrl" style="font-family: monospace;"></span></p>
+            <p><i class="fas fa-network-wired"></i> 网络访问:
+                <span id="networkUrls" style="font-family: monospace; font-size: 12px;"></span>
+            </p>
+            <p>
+                <i class="fas fa-cogs"></i> 系统链接:
+                <a th:href="@{/health}" target="_blank">
+                    <i class="fas fa-heartbeat"></i> 健康检查
+                </a> |
+                <a th:href="@{/contacts}" target="_blank">
+                    <i class="fas fa-users"></i> 联系人列表
+                </a> |
+                <a th:href="@{/h2-console}" target="_blank">
+                    <i class="fas fa-database"></i> H2控制台
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 显示当前访问地址
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentUrl = window.location.origin;
+        const port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+
+        document.getElementById('currentUrl').textContent = currentUrl;
+
+        // 显示可能的网络地址
+        const networkInfo = document.getElementById('networkUrls');
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            networkInfo.innerHTML = '本地访问';
+        } else {
+            networkInfo.innerHTML = `
+                局域网: http://${window.location.hostname}:${port}<br>
+                本地: http://localhost:${port}
+            `;
+        }
+
+        console.log('📱 页面加载完成');
+        console.log('🌐 完整地址:', window.location.href);
+        console.log('🔗 根路径:', currentUrl);
+        console.log('🚪 端口:', port);
+
+        // 测试页面链接
+        setTimeout(() => {
+            console.log('🔗 可用链接测试:');
+            console.log('  - 主页: ' + currentUrl + '/');
+            console.log('  - 联系人列表: ' + currentUrl + '/contacts');
+            console.log('  - 添加联系人: ' + currentUrl + '/contacts/add');
+            console.log('  - 数据库控制台: ' + currentUrl + '/h2-console');
+            console.log('  - 健康检查: ' + currentUrl + '/health');
+        }, 500);
+    });
+
+    // 测试链接函数
+    async function testLink(url) {
+        try {
+            const response = await fetch(url);
+            return response.ok;
+        } catch (error) {
+            return false;
+        }
+    }
+</script>
+</body>
+</html>
